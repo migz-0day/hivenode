@@ -1,0 +1,6 @@
+host.key
+logs/
+__pycache__/
+.venv/
+venv
+*.json
