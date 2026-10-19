@@ -4,3 +4,10 @@ __pycache__/
 .venv/
 venv
 *.json
+.venv-1
+
+node_modules/
+*.env
+.env*
+.DS_Store
+*.log

@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
+"""
+Hivenode V4
+you can run python test_attack.py which automates the attack with the user name root and password
+password123 which you can change to any of your choice 
+
+"""
+
+
+
 import socket,threading,json,time,os
 from datetime import datetime
-import paramiko
+import paramiko 
+import requests
 
 HOST ="0.0.0.0"
 PORT =2222
@@ -18,16 +28,31 @@ else:
     HOST_KEY.write_private_key_file(KEY_FILE)
     print(f"[*] Created permanent {KEY_FILE}")
 
+def get_loc(ip):
+    if ip.startswith("127.") or ip.startswith("192.168") or ip.startswith("10."):
+        return "local /kali"
+    try:
+        r=requests.get(f"http://ip-api.com/json{ip}?fields=country,city",timeout=2).json()
+        return f"{r.get('country','?')} /{r.get('city','?')}"
+    except:
+        return "Unknown"
+
 def log_attack(ip,username,password):
-    entry ={"time":datetime.now().strftime("%Y-%m-%d %H:%M:%S"),"ip":ip,"username":username,"password":password}
+    entry ={"time":datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "ip":ip,
+            "location":get_loc(ip),
+            "username":username,
+            "password":password
+            }
     os.makedirs("logs",exist_ok=True)
     with open(LOG_FILE,"a") as f:
         f.write(json.dumps(entry) +"\n")
-    print(f"[LOGGED] {ip} tried {username}:{password}")
+    print(f"[LOGGED] {ip}({entry['location']}) tried {username}:{password}")
 
 class hiveServer(paramiko.ServerInterface):
     def __init__(self, client_ip):
         self.client_ip = client_ip
+        self.event=threading.Event()
 
     def check_channel_request(self,kind,chanid):
         return paramiko.OPEN_SUCCEEDED if kind == "session" else paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
@@ -40,6 +65,7 @@ class hiveServer(paramiko.ServerInterface):
         return "password"
 
 def handle_client(client_socket,client_ip):
+    ip=client_ip[0]
     try:
         transport= paramiko.Transport(client_socket)
         transport.add_server_key(HOST_KEY)
@@ -49,15 +75,17 @@ def handle_client(client_socket,client_ip):
         if channel:
             while transport.is_active():
                 time.sleep(0.5)
-    except:
-        pass
+    except Exception as e:
+        print(f"[!]Error {ip}:{e}")
     finally:
-        try: transport.close()
+        try: 
+            transport.close()
         except: pass
         client_socket.close()
 
 def main():
     print(f"[*] Hive listening on {HOST}:{PORT} with permanent key")
+
     sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR, 1)
     sock.bind((HOST, PORT))
@@ -75,3 +103,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
