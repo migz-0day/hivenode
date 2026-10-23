@@ -4,18 +4,11 @@ __pycache__/
 .venv/
 venv
 *.json
-<<<<<<< Updated upstream
-.venv-1
-
-=======
-#  sensitive 
->>>>>>> Stashed changes
 node_modules/
 *.env
 .env*
 .DS_Store
 *.log
-<<<<<<< Updated upstream
 bug.py
-=======
->>>>>>> Stashed changes
+alert.py
+pot/
