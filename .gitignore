@@ -12,3 +12,10 @@ node_modules/
 bug.py
 alert.py
 pot/
+dist/
+src/*.json
+src/*.js.map
+
+
+
+
